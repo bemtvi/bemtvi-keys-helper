@@ -8,10 +8,36 @@ the bottom-right corner listing every key that can come next, each with its
 description. Keep typing into a group and it refreshes to that group's keys;
 complete a mapping, break the sequence, or wait out the timeout and it closes.
 
+```
+╭  <C-w> — Window  ────────────────────────────────────╮
+│ +       Taller                 _   Max height        │
+│ -       Shorter                c   Close window      │
+│ <       Narrower               h   Focus left        │
+│ <C-w>   +Dock layer            j   Focus down        │
+│ =       Equalize sizes         k   Focus up          │
+│ >       Wider                  l   Focus right       │
+│ H       Move window left       o   Only window       │
+│ J       Move window down       q   Quit window       │
+│ K       Move window up         s   Split horizontal  │
+│ L       Move window right      v   Split vertical    │
+│ T       Move to new tab        w   Focus next window │
+│ W       Focus previous window  |   Max width         │
+╰──────────────────────────────────────────────────────╯
+```
+
 It is built natively on the `nx.*` API — **no blocking key reads, no key
 interception**. It subscribes to nxvim's pending-key *oracle*
 (`nx.on_key_pending`) and renders the continuations onto a non-focus floating
 window, so it never interrupts the sequence you're in the middle of typing.
+
+- **Your maps and the built-in grammar** — the same oracle feeds `showcmd`, so
+  `z`, `g`, `<C-w>` and the operator-pending states show up alongside your own
+  mappings (and `g` merges both into one popup).
+- **Named groups** — a bare prefix reads as `+file` / `+git` instead of `+more`.
+- **Columnized** — a long alphabet spills into columns rather than off the
+  bottom of the float.
+- **Themeable** — the which-key.nvim highlight-group names, installed only as a
+  fallback so your colorscheme wins.
 
 ## Install
 
@@ -30,118 +56,39 @@ nx.plugins({
 
 Then run `:PluginSync` to clone it. That's it — start typing a prefix and pause.
 
-## Configuration
+## Documentation
 
-`setup()` takes an optional table; the defaults are:
+Full docs — every `setup()` option, naming prefix groups, the built-in command
+grammar, the highlight groups, and the module API — live in the help file. The
+same source renders both on GitHub and in the editor:
 
-```lua
-require("nxvim-keys-helper").setup({
-  delay = 200,          -- pause (ms) after the last key before the popup shows
-  timeout = false,      -- vim.o.timeout: false keeps a paused prefix pending; true restores the mapping timeout
-  relative = "bottom",  -- float anchor: "bottom" | "cursor" | "editor"
-  border = "rounded",   -- "rounded" | "single" | "double" | "solid" | "none"
-  group_marker = "+",   -- shown before a group name, e.g. "+file"
-  highlights = {},      -- override the popup's highlight groups (see below)
-  spec = {},            -- name your prefix groups (see below)
-})
-```
-
-`setup()` is idempotent — calling it again re-applies config and highlights
-without mounting a second popup.
-
-### Naming groups
-
-A prefix that only leads deeper (e.g. `<leader>f` when you have `<leader>ff` and
-`<leader>fg`) shows as a **group**. nxvim's engine has no description to attach to
-a bare prefix, so by default a group renders as `+more`. Give it a real name with
-`spec` (or call `require("nxvim-keys-helper").add(...)` any time):
-
-```lua
-require("nxvim-keys-helper").setup({
-  spec = {
-    { "<leader>f", group = "file" }, -- positional prefix
-    { prefix = "<leader>g", group = "git" }, -- or the named field
-  },
-})
-```
-
-`<leader>` / `<localleader>` are expanded the same way nxvim reports keys, so the
-registry matches whatever leader you've set.
-
-Leaf mappings need no registration — their description comes straight from the
-`desc` you pass to `nx.keymap.set`:
-
-```lua
-nx.keymap.set("n", "<leader>w", "<cmd>write<cr>", { desc = "write" })
-```
-
-### Highlights
-
-The popup uses four highlight groups (the which-key.nvim names, so a colorscheme
-that already styles them just works):
-
-| Group               | What it colors                       |
-| ------------------- | ------------------------------------ |
-| `WhichKey`          | the key itself                       |
-| `WhichKeyGroup`     | a `+group` label                     |
-| `WhichKeyDesc`      | a mapping's description / hint card  |
-| `WhichKeySeparator` | the gap between the key and its desc |
-
-The plugin only installs its built-in colors as a **fallback** — if your
-colorscheme (or your `highlights` override) already defines a group, that wins.
-Override any of them explicitly:
-
-```lua
-require("nxvim-keys-helper").setup({
-  highlights = {
-    WhichKey = { fg = "#89b4fa" },
-    WhichKeyGroup = { fg = "#f9e2af", bold = true },
-  },
-})
-```
-
-## Built-in command grammar
-
-The popup is fed by the same oracle nxvim uses for `showcmd`, so it covers the
-built-in motions too, not just your maps:
-
-- pause after `z` for the viewport commands (`zt`/`zz`/`zb`…),
-- after `<C-w>` for the window commands,
-- after `g` for the go-to motions, **merged** with any `g`-prefixed maps (the LSP
-  `gd`/`gD`/`gr` defaults),
-- mid-`f` or after a lone operator (`d`/`c`/`y`) for an "awaiting input" hint card
-  (`Find character`, `Operator pending`, …).
+- In editor: `:help nxvim-keys-helper`
+- On GitHub: [doc/nxvim-keys-helper.md](./doc/nxvim-keys-helper.md) (the help source)
 
 ## Trying it locally
-
-This repo ships a runnable demo. From a checkout of this repo:
 
 ```sh
 NXVIM_CONFIG=examples nxvim examples/sample.txt
 ```
 
-The demo's `init.lua` loads the plugin straight from this checkout (`dir=`), so
-no `:PluginSync` is needed — see `examples/init.lua`.
+(run from the repo root — the demo config in `examples/init.lua` loads the plugin
+straight from this checkout, so no `:PluginSync` is needed).
 
-## Tests
-
-This plugin carries a Lua test suite (`test/popup_spec.lua`) built on nxvim's
-native `nx.test` framework. Run it headlessly:
+## Development
 
 ```sh
 nxvim --test-plugin .
 ```
 
-The suite drives a real editor — feed a leader prefix, wait for the debounced
-popup, and assert on the floating window's text via `t:float()`:
+The Lua suite (`test/popup_spec.lua`) drives a real editor through nxvim's native
+`nx.test` framework: feed a leader prefix, wait for the debounced popup, and
+assert on the floating window's text via `t:float()`.
 
-```lua
-nx.test.it("shows the leader menu on pause", function(t)
-  t:feed("<Space>")
-  local float = t:wait_for(function() return t:float() end)
-  nx.test.expect(float.text).to_contain("write")
-end)
-```
+The vimdoc `doc/nxvim-keys-helper.txt` is **generated** from
+`doc/nxvim-keys-helper.md` via
+[panvimdoc](https://github.com/kdheepak/panvimdoc): edit the `.md`, then run
+`bash scripts/gen-vimdoc.sh` (needs `pandoc` + `git`). Never edit the `.txt` by
+hand.
 
 ## License
 
