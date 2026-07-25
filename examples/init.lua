@@ -2,15 +2,21 @@
 --
 --     NXVIM_CONFIG=examples nxvim examples/sample.txt
 --
--- TRY IT: press <leader> (Space) and pause — the popup lists the keys below with
--- their descriptions, `f`/`g` shown as named groups. Type into a group (`f`) and it
--- refreshes; pause after `z`, `g`, or `<C-w>` for the built-in command grammar.
+-- Each section below has a TYPE THIS / SEE THAT note. The short version: press
+-- <leader> (Space) and pause.
 
+-- ----- 1. the leader ---------------------------------------------------------
+-- Set before anything registers a <leader> map or group. (The plugin expands
+-- <leader> when the popup RENDERS, so setting it later still works — but keeping
+-- it first is the habit that keeps your keymaps unambiguous.)
 vim.g.mapleader = " "
 
--- Load the plugin straight from this repo (a local-dev spec: `dir` is never cloned).
--- A real config would instead use `{ "davidrios/nxvim-keys-helper", config = ... }`
--- and `:PluginSync`.
+-- ----- 2. load the plugin ----------------------------------------------------
+-- Straight from this repo (a local-dev spec: `dir` is never cloned). A real config
+-- would use `{ "davidrios/nxvim-keys-helper", config = ... }` plus `:PluginSync`.
+--
+-- TYPE THIS: <Space> and pause.  SEE THAT: a popup in the bottom-right corner
+-- listing w / q / +file / +git.
 nx.plugins({
   {
     name = "nxvim-keys-helper",
@@ -27,8 +33,12 @@ nx.plugins({
   },
 })
 
--- A small leader menu. `ff`/`fg` and `gs`/`gc` make `f` and `g` groups; the
--- single-key maps complete immediately, carrying their `desc`.
+-- ----- 3. a small leader menu ------------------------------------------------
+-- `ff`/`fg` and `gs`/`gc` make `f` and `g` groups; the single-key maps complete
+-- immediately, carrying their `desc`.
+--
+-- TYPE THIS: <Space> then f (while the popup is up).  SEE THAT: it refreshes to
+-- the `f` group's keys AT ONCE — no second 200ms wait once the popup is open.
 nx.keymap.set("n", "<leader>w", function()
   print("write")
 end, { desc = "write" })
@@ -47,3 +57,28 @@ end, { desc = "git status" })
 nx.keymap.set("n", "<leader>gc", function()
   print("git commit")
 end, { desc = "git commit" })
+
+-- ----- 4. naming a group after the fact --------------------------------------
+-- `add()` works any time — before or after setup(), before or after the leader is
+-- set. Here it names a group whose maps are declared below it.
+--
+-- TYPE THIS: <Space> and pause.  SEE THAT: `b` reads "+buffer", not "+more".
+require("nxvim-keys-helper").add({
+  { "<leader>b", group = "buffer" },
+})
+nx.keymap.set("n", "<leader>bn", "<cmd>bnext<cr>", { desc = "next buffer" })
+nx.keymap.set("n", "<leader>bp", "<cmd>bprevious<cr>", { desc = "previous buffer" })
+
+-- ----- 5. capping the popup's size -------------------------------------------
+-- The popup spills into COLUMNS rather than off the bottom of the float, and
+-- ellipsizes descriptions rather than letting a column be clipped off the right.
+--
+-- TYPE THIS: <C-w> and pause.  SEE THAT: all 24 window commands, in two columns.
+-- Then uncomment the setup() below, restart, and try <C-w> again.
+--
+-- SEE THAT: the same keys re-flow into three narrow columns with ellipsized
+-- descriptions. Cap it tighter still (`max_height = 5, max_width = 40`) and the
+-- last cell becomes a "+5 more" badge — the popup says what it couldn't show
+-- rather than dropping keys in silence.
+--
+-- require("nxvim-keys-helper").setup({ max_height = 8, max_width = 46 })

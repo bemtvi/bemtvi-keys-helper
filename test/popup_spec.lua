@@ -82,4 +82,144 @@ nx.test.describe("nxvim-keys-helper", function()
     -- `zt` (scroll cursor to top) — its continuation key `t` is listed.
     nx.test.expect(float.text).to_contain("t")
   end)
+
+  -- An OPEN built-in state (source B) has no key list — it arrives with empty
+  -- continuations and a label, which renders as a one-line hint card in the title
+  -- and the body.
+  nx.test.it("shows a hint card for an open built-in state", function(t)
+    t:feed("f")
+    local float = t:wait_for(function()
+      return t:float()
+    end)
+    nx.test.expect(float.text).to_contain("Find character")
+    nx.test.expect(float.title).to_contain("Find character")
+  end)
+
+  -- REGRESSION: the `<C-w>` alphabet is 24 keys, more than the content float's
+  -- 20-row cap — as a single column the server clipped the tail and the popup
+  -- silently lost `s`/`v`/`w`/`|`. They must be columnized, never dropped.
+  nx.test.it("columnizes a long grammar instead of dropping rows", function(t)
+    t:feed("<C-w>")
+    local float = t:wait_for(function()
+      return t:float()
+    end)
+    -- Within the float's row cap...
+    nx.test.expect(#float.lines <= 20).to_be_truthy()
+    -- ...and still carrying the keys that used to fall off the end.
+    nx.test.expect(float.text).to_contain("Split horizontal")
+    nx.test.expect(float.text).to_contain("Split vertical")
+    nx.test.expect(float.text).to_contain("Max width")
+    -- ...as well as the head of the list.
+    nx.test.expect(float.text).to_contain("Taller")
+    nx.test.expect(float.text).to_contain("Dock layer")
+  end)
+
+  -- Every row stays inside the float's 80-column cap, so a columnized layout never
+  -- gets its right-hand column clipped off.
+  nx.test.it("keeps columnized rows within the float width cap", function(t)
+    t:feed("<C-w>")
+    local float = t:wait_for(function()
+      return t:float()
+    end)
+    for _, line in ipairs(vim.split(float.text, "\n", { plain = true })) do
+      nx.test.expect(nx.str.displaywidth(line) <= 80).to_be_truthy()
+    end
+  end)
+
+  -- Too narrow for the natural column widths: descriptions ellipsize so every column
+  -- still fits, rather than the float clipping one off the right edge.
+  nx.test.it("ellipsizes descriptions when the popup is capped narrow", function(t)
+    local kh = require("nxvim-keys-helper")
+    kh.setup({ max_width = 34 })
+    t:feed("<C-w>")
+    local float = t:wait_for(function()
+      return t:float()
+    end)
+    kh.setup({ max_width = 80 })
+    for _, line in ipairs(vim.split(float.text, "\n", { plain = true })) do
+      nx.test.expect(nx.str.displaywidth(line) <= 34).to_be_truthy()
+    end
+    nx.test.expect(float.text).to_contain("…")
+  end)
+
+  -- Capped so short that not even columns fit everything: the popup SAYS how many
+  -- keys it couldn't show instead of dropping them silently.
+  nx.test.it("reports the keys a too-small popup cannot show", function(t)
+    local kh = require("nxvim-keys-helper")
+    kh.setup({ max_height = 2 })
+    t:feed("<C-w>")
+    local float = t:wait_for(function()
+      return t:float()
+    end)
+    kh.setup({ max_height = 20 })
+    nx.test.expect(#float.lines).to_equal(2)
+    nx.test.expect(float.text).to_contain("more")
+    -- The marker has to FIT — it is what announces the overflow, so it must not be
+    -- the thing the float clips off the right edge.
+    for _, line in ipairs(vim.split(float.text, "\n", { plain = true })) do
+      nx.test.expect(nx.str.displaywidth(line) <= 78).to_be_truthy()
+    end
+  end)
+
+  -- A re-run of setup() re-applies config to the LIVE popup: the show delay is read
+  -- when a prefix goes pending, not frozen into the debounce at mount time.
+  nx.test.it("re-applies the delay on a second setup", function(t)
+    local kh = require("nxvim-keys-helper")
+    kh.setup({ delay = 60000 })
+    t:feed("<Space>", { settle = 4 })
+    -- Nothing showed in those ticks — the new 60s delay is in force.
+    nx.test.expect(t:float()).to_be_nil()
+    kh.setup({ delay = 0 }) -- restore for the tests after this one
+    t:feed("<Esc>")
+  end)
+
+  -- Once the popup is UP, descending refreshes it immediately: re-debouncing would
+  -- leave the previous prefix's keys on screen for another `delay` ms.
+  nx.test.it("refreshes an open popup without re-waiting the delay", function(t)
+    local kh = require("nxvim-keys-helper")
+    kh.setup({ delay = 300 })
+    t:feed("<Space>")
+    t:wait_for(function()
+      return t:float()
+    end, { interval = 5, tries = 200 })
+    -- A few settle ticks — single-digit ms, far under the 300ms show delay.
+    t:feed("f", { settle = 3 })
+    nx.test.expect(t:float().text).to_contain("find file")
+    kh.setup({ delay = 0 })
+  end)
+
+  -- `<leader>` in a spec is resolved when the popup RENDERS, not when the entry is
+  -- registered — a config that sets `vim.g.mapleader` after the plugin's setup()
+  -- (the usual lazy-plugin ordering) still gets its group names.
+  nx.test.it("resolves <leader> in the spec at render time", function(t)
+    local kh = require("nxvim-keys-helper")
+    vim.g.mapleader = "," -- register the group under a DIFFERENT leader...
+    kh.add({ { "<leader>z", group = "zed" } })
+    vim.g.mapleader = " " -- ...then settle on the real one
+    nx.keymap.set("n", "<leader>za", function() end, { desc = "alpha" })
+    t:feed("<Space>")
+    local float = t:wait_for(function()
+      return t:float()
+    end)
+    nx.test.expect(float.text).to_contain("+zed")
+  end)
+
+  -- A colorscheme almost always opens with `:hi clear`, wiping the fallback groups.
+  -- The plugin must re-install them on ColorScheme, or the popup loses its colors
+  -- the moment a theme loads.
+  nx.test.it("re-installs its highlight fallbacks after a colorscheme", function(t)
+    t:cmd("hi clear")
+    nx.test.expect(nx.hl.exists("WhichKey")).to_be_falsy()
+    t:cmd("colorscheme nxvim")
+    nx.test.expect(nx.hl.exists("WhichKey")).to_be_truthy()
+    nx.test.expect(nx.hl.exists("WhichKeyGroup")).to_be_truthy()
+  end)
+
+  -- Loud on nonsense rather than a popup that silently never shows.
+  nx.test.it("rejects a bad option type", function(t)
+    local kh = require("nxvim-keys-helper")
+    local ok, err = pcall(kh.setup, { delay = "soon" })
+    nx.test.expect(ok).to_be_falsy()
+    nx.test.expect(tostring(err)).to_contain("delay")
+  end)
 end)

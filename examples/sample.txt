@@ -15,6 +15,10 @@ The built-in command grammar feeds the same popup — try pausing after:
 
     z        viewport commands (zt / zz / zb ...)
     g        go-to motions (gg / gt ...) merged with any g-prefixed maps
-    <C-w>    window commands
+    <C-w>    window commands — 24 of them, laid out in TWO columns because
+             they don't fit the float in one
     f        an "awaiting input" hint card (Find character)
-    d        operator-pending hint
+    d        operator-pending hint (also columnized)
+
+Section 5 of examples/init.lua caps the popup with max_height / max_width —
+uncomment it to watch the columns re-flow and long descriptions ellipsize.
