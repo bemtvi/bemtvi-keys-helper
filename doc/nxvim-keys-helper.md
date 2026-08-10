@@ -178,7 +178,11 @@ WhichKeySeparator  the gap between the key and its description
 ```
 
 The plugin installs its built-in colors only as a **fallback** — if your colorscheme (or your
-`highlights` override) already defines a group, that wins. Override any of them explicitly:
+`highlights` override) already defines a group, that wins. Those built-in colors are not
+hardcoded to one theme: they are *derived* from the active colorscheme through `nx.hl.palette()`
+(the key takes its cyan, a group its purple, and so on from the hues the running theme actually
+uses), so the popup reads as part of whatever is loaded — the editor's own `nxvim` One Dark by
+default. Override any of them explicitly:
 
 ```lua
 require("nxvim-keys-helper").setup({
@@ -189,9 +193,9 @@ require("nxvim-keys-helper").setup({
 })
 ```
 
-Because most colorschemes open with `:hi clear`, the fallbacks are re-installed on every
-`ColorScheme` event — after the new theme has had its say, so a theme that styles `WhichKey*`
-still wins and one that doesn't keeps working colors.
+The fallbacks are re-derived and re-installed on every `ColorScheme` event — after the new theme
+has had its say, so a theme that styles `WhichKey*` still wins, and one that doesn't gets colors
+taken from *its* palette rather than the previous theme's.
 
 # API
 

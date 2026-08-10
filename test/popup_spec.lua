@@ -215,6 +215,33 @@ nx.test.describe("nxvim-keys-helper", function()
     nx.test.expect(nx.hl.exists("WhichKeyGroup")).to_be_truthy()
   end)
 
+  -- The defaults are DERIVED from the active theme (nx.hl.palette), not hardcoded, so
+  -- the popup reads as part of whatever colorscheme is loaded. Under the editor's own
+  -- `nxvim` scheme that means its One Dark hues, and switching themes re-derives them.
+  nx.test.it("derives its default colors from the active colorscheme", function(t)
+    local function fg(group)
+      local d = nx.hl.get(0, { name = group, link = false })
+      return d.fg and string.format("#%06x", d.fg) or nil
+    end
+    t:cmd("colorscheme nxvim")
+    nx.test.expect(fg("WhichKey")).to_equal("#56b6c2") -- One Dark cyan
+    nx.test.expect(fg("WhichKeyGroup")).to_equal("#c678dd") -- One Dark purple
+    nx.test.expect(fg("WhichKeyDesc")).to_equal("#abb2bf") -- One Dark fg
+    nx.test.expect(fg("WhichKeySeparator")).to_equal("#5c6370") -- One Dark comment
+
+    -- A different theme moves them: define the groups the palette reads, then reload.
+    t:cmd("hi clear")
+    nx.hl.define(0, "Operator", { fg = "#111111" })
+    nx.hl.define(0, "Keyword", { fg = "#222222" })
+    nx.hl.define(0, "Normal", { fg = "#333333", bg = "#000000" })
+    nx.hl.define(0, "Comment", { fg = "#444444" })
+    require("nxvim-keys-helper").setup()
+    nx.test.expect(fg("WhichKey")).to_equal("#111111")
+    nx.test.expect(fg("WhichKeyGroup")).to_equal("#222222")
+    nx.test.expect(fg("WhichKeyDesc")).to_equal("#333333")
+    nx.test.expect(fg("WhichKeySeparator")).to_equal("#444444")
+  end)
+
   -- Loud on nonsense rather than a popup that silently never shows.
   nx.test.it("rejects a bad option type", function(t)
     local kh = require("nxvim-keys-helper")

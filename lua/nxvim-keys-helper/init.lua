@@ -48,15 +48,23 @@ local M = {}
 -- The plugin's default highlight groups, mirroring the which-key.nvim names so a
 -- colorscheme that already styles them just works. These are only applied as a
 -- FALLBACK — if the active colorscheme (or the user, via opts.highlights) already
--- defines a group, that definition wins (see apply_highlights). The defaults read
--- well on a dark background with no theme loaded, so a bare setup() still looks
--- right.
-local DEFAULT_HIGHLIGHTS = {
-  WhichKey = { fg = "#7dcfff" }, -- the key itself (cyan)
-  WhichKeyGroup = { fg = "#bb9af7", bold = true }, -- a +prefix group
-  WhichKeyDesc = { fg = "#c0caf5" }, -- a mapping's description
-  WhichKeySeparator = { fg = "#565f89" }, -- the gap between key and desc
-}
+-- defines a group, that definition wins (see apply_highlights).
+--
+-- The colours are DERIVED from the active theme via `nx.hl.palette()` rather than
+-- hardcoded, so the popup reads as part of whatever colorscheme is loaded — the
+-- editor's own `nxvim` One Dark by default, catppuccin under catppuccin, and a light
+-- flavour without a dark-theme hex bleeding through. That also means this is a
+-- function, not a constant: it is re-evaluated on every apply (see the ColorScheme
+-- hook in setup), because the palette it reads changes with the theme.
+local function default_highlights()
+  local p = nx.hl.palette()
+  return {
+    WhichKey = { fg = p.cyan }, -- the key itself
+    WhichKeyGroup = { fg = p.purple, bold = true }, -- a +prefix group
+    WhichKeyDesc = { fg = p.fg }, -- a mapping's description
+    WhichKeySeparator = { fg = p.muted }, -- the gap between key and desc
+  }
+end
 
 -- Defaults merged with the user's opts in setup(). `delay` is the pause (ms) after
 -- the LAST key before the popup appears — real which-key uses ~200ms so quick,
@@ -194,19 +202,23 @@ end
 -- ----- highlights -----------------------------------------------------------
 
 -- Apply the highlight groups as a FALLBACK: an explicit user override (opts.highlights)
--- always wins; otherwise a default is installed only when the group isn't already
--- defined, so a colorscheme that styles WhichKey* keeps its colors.
+-- always wins; otherwise the palette-derived default goes in through `nx.hl.fallback`,
+-- so a colorscheme that styles WhichKey* keeps its colors while a group NO theme
+-- models is re-derived on every apply instead of being left at the previous theme's
+-- value (which a plain `nx.hl.exists` guard would do — see the ColorScheme hook in
+-- setup).
 local function apply_highlights(user)
-  for name, spec in pairs(DEFAULT_HIGHLIGHTS) do
+  local defaults = default_highlights()
+  for name, spec in pairs(defaults) do
     if user[name] then
       nx.hl.define(0, name, user[name])
-    elseif not nx.hl.exists(name) then
-      nx.hl.define(0, name, spec)
+    else
+      nx.hl.fallback(name, spec)
     end
   end
   -- Any extra groups the user named that aren't in our defaults — honor them too.
   for name, spec in pairs(user) do
-    if not DEFAULT_HIGHLIGHTS[name] then
+    if not defaults[name] then
       nx.hl.define(0, name, spec)
     end
   end
