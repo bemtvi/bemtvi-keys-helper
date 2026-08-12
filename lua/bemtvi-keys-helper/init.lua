@@ -1,15 +1,15 @@
--- nxvim-keys-helper — a live popup of the keys that can follow what you've typed.
+-- bemtvi-keys-helper — a live popup of the keys that can follow what you've typed.
 --
--- A which-key for nxvim, built natively on `nx.*`: no blocking key reads, no key
--- interception. It listens to the engine's pending-key ORACLE (`nx.on_key_pending`)
+-- A which-key for bemtvi, built natively on `btv.*`: no blocking key reads, no key
+-- interception. It listens to the engine's pending-key ORACLE (`btv.on_key_pending`)
 -- and draws the continuations as a non-focus floating window — so it never
 -- interrupts the sequence you're in the middle of typing.
 --
 -- Install it through the `:Plugins` manager (in your init.lua):
 --
---     nx.plugins({
---       { "davidrios/nxvim-keys-helper",
---         config = function() require("nxvim-keys-helper").setup({}) end },
+--     btv.plugins({
+--       { "davidrios/bemtvi-keys-helper",
+--         config = function() require("bemtvi-keys-helper").setup({}) end },
 --     })
 --
 -- TRY IT: press <leader> (or `g`, `z`, `<C-w>`) and pause. A bordered popup
@@ -18,9 +18,9 @@
 -- complete a mapping, break the sequence, or wait the timeout and it closes.
 --
 -- ---------------------------------------------------------------------------
--- How it works (the three nx signals)
+-- How it works (the three btv signals)
 -- ---------------------------------------------------------------------------
---   * nx.on_key_pending(fn)   the engine's pending-prefix ORACLE. The server
+--   * btv.on_key_pending(fn)   the engine's pending-prefix ORACLE. The server
 --                 watches the mapped-prefix trie and pushes a context
 --                 — { mode, keys, continuations = {{ key, desc, kind, available }}, label }
 --                 — every time the withheld prefix changes (grows / descends /
@@ -33,12 +33,12 @@
 --                 commands) carry enumerated `continuations`, and for `g` the engine
 --                 MERGES the built-in motions with any maps sharing the `g` prefix
 --                 (the LSP gd/gD/gr defaults) into one popup.
---   * nx.component{ surface = "float" }   the popup is a FLOAT-backed component:
+--   * btv.component{ surface = "float" }   the popup is a FLOAT-backed component:
 --                 reactive state (the pending context) + a pure `render` + a
 --                 lifecycle. An EMPTY render hides it, so the whole show/refresh/hide
 --                 is declarative and the plugin never touches a float handle. The
 --                 "float" surface takes NO focus and binds NO keys.
---   * nx.utils.debounce(fn, ms)   coalesce the oracle's bursts so a fast, deliberate
+--   * btv.utils.debounce(fn, ms)   coalesce the oracle's bursts so a fast, deliberate
 --                 sequence (`<Space>w` typed quickly) never flashes the popup — it
 --                 only appears when you PAUSE. Only the FIRST show is debounced; once
 --                 the popup is up, descending refreshes it at once (see setup).
@@ -50,14 +50,14 @@ local M = {}
 -- FALLBACK — if the active colorscheme (or the user, via opts.highlights) already
 -- defines a group, that definition wins (see apply_highlights).
 --
--- The colours are DERIVED from the active theme via `nx.hl.palette()` rather than
+-- The colours are DERIVED from the active theme via `btv.hl.palette()` rather than
 -- hardcoded, so the popup reads as part of whatever colorscheme is loaded — the
--- editor's own `nxvim` One Dark by default, catppuccin under catppuccin, and a light
+-- editor's own `bemtvi` One Dark by default, catppuccin under catppuccin, and a light
 -- flavour without a dark-theme hex bleeding through. That also means this is a
 -- function, not a constant: it is re-evaluated on every apply (see the ColorScheme
 -- hook in setup), because the palette it reads changes with the theme.
 local function default_highlights()
-  local p = nx.hl.palette()
+  local p = btv.hl.palette()
   return {
     WhichKey = { fg = p.cyan }, -- the key itself
     WhichKeyGroup = { fg = p.purple, bold = true }, -- a +prefix group
@@ -165,23 +165,23 @@ end
 --   { "<leader>f", group = "file" }            (positional prefix)
 --   { prefix = "<leader>g", group = "git" }    (named field)
 -- Only the group NAME is taken from here — leaf mappings carry their own `desc`
--- through nx.keymap.set. Call it any time (before or after setup, before or after
+-- through btv.keymap.set. Call it any time (before or after setup, before or after
 -- `vim.g.mapleader` is set); the next popup reflects it. Re-adding a prefix replaces
 -- its name, so calling it repeatedly is safe.
 function M.add(spec)
   if type(spec) ~= "table" then
-    error("nxvim-keys-helper.add: expects a list of { prefix, group } entries", 2)
+    error("bemtvi-keys-helper.add: expects a list of { prefix, group } entries", 2)
   end
   for _, entry in ipairs(spec) do
     if type(entry) ~= "table" then
-      error("nxvim-keys-helper.add: each entry must be a { prefix, group } table", 2)
+      error("bemtvi-keys-helper.add: each entry must be a { prefix, group } table", 2)
     end
     local prefix = entry.prefix or entry[1]
     if type(prefix) ~= "string" then
-      error("nxvim-keys-helper.add: each entry needs a prefix string", 2)
+      error("bemtvi-keys-helper.add: each entry needs a prefix string", 2)
     end
     if entry.group ~= nil and type(entry.group) ~= "string" then
-      error("nxvim-keys-helper.add: `group` must be a string", 2)
+      error("bemtvi-keys-helper.add: `group` must be a string", 2)
     end
     local found
     for _, e in ipairs(M._spec) do
@@ -202,24 +202,24 @@ end
 -- ----- highlights -----------------------------------------------------------
 
 -- Apply the highlight groups as a FALLBACK: an explicit user override (opts.highlights)
--- always wins; otherwise the palette-derived default goes in through `nx.hl.fallback`,
+-- always wins; otherwise the palette-derived default goes in through `btv.hl.fallback`,
 -- so a colorscheme that styles WhichKey* keeps its colors while a group NO theme
 -- models is re-derived on every apply instead of being left at the previous theme's
--- value (which a plain `nx.hl.exists` guard would do — see the ColorScheme hook in
+-- value (which a plain `btv.hl.exists` guard would do — see the ColorScheme hook in
 -- setup).
 local function apply_highlights(user)
   local defaults = default_highlights()
   for name, spec in pairs(defaults) do
     if user[name] then
-      nx.hl.define(0, name, user[name])
+      btv.hl.define(0, name, user[name])
     else
-      nx.hl.fallback(name, spec)
+      btv.hl.fallback(name, spec)
     end
   end
   -- Any extra groups the user named that aren't in our defaults — honor them too.
   for name, spec in pairs(user) do
     if not defaults[name] then
-      nx.hl.define(0, name, spec)
+      btv.hl.define(0, name, spec)
     end
   end
 end
@@ -227,7 +227,7 @@ end
 -- ----- layout ---------------------------------------------------------------
 
 -- The content float's own caps, mirrored from the server's projection
--- (nxvim-server/src/redraw.rs::project_content_float): rows past MAX_H and cells past
+-- (bemtvi-server/src/redraw.rs::project_content_float): rows past MAX_H and cells past
 -- MAX_W are CLIPPED, silently. The `<C-w>` alphabet alone is 24 keys — laid out as one
 -- column it lost its last four rows off the bottom of the float with nothing on screen
 -- to say so. So the layout budgets itself against these caps and spills into COLUMNS
@@ -261,17 +261,17 @@ local function clip(s, w, sw)
   if w <= 1 then
     return "…", 1
   end
-  local lo, hi = 0, nx.str.chars(s) -- widest char-prefix that fits w-1 cells
+  local lo, hi = 0, btv.str.chars(s) -- widest char-prefix that fits w-1 cells
   while lo < hi do
     local mid = math.floor((lo + hi + 1) / 2)
-    if nx.str.displaywidth(nx.str.charpart(s, 0, mid)) <= w - 1 then
+    if btv.str.displaywidth(btv.str.charpart(s, 0, mid)) <= w - 1 then
       lo = mid
     else
       hi = mid - 1
     end
   end
-  local head = nx.str.charpart(s, 0, lo)
-  return head .. "…", nx.str.displaywidth(head) + 1
+  local head = btv.str.charpart(s, 0, lo)
+  return head .. "…", btv.str.displaywidth(head) + 1
 end
 
 -- The badge shown when the popup is too small to hold every key — see columnize.
@@ -302,7 +302,7 @@ local function columnize(entries, h, w)
     n = capacity
     -- The marker occupies the reserved cell, so the columns must leave room for it —
     -- otherwise the very badge announcing the overflow is what the float clips off.
-    w = math.max(MIN_CELL, w - nx.str.displaywidth(overflow_marker(hidden)))
+    w = math.max(MIN_CELL, w - btv.str.displaywidth(overflow_marker(hidden)))
   end
 
   local cols = {}
@@ -371,9 +371,9 @@ local function entries_for(ctx)
       end
       out[#out + 1] = {
         key = c.key,
-        kw = nx.str.displaywidth(c.key),
+        kw = btv.str.displaywidth(c.key),
         label = label,
-        lw = nx.str.displaywidth(label),
+        lw = btv.str.displaywidth(label),
         hl = hl,
       }
     end
@@ -464,7 +464,7 @@ local OPTIONS = {
 function M.setup(opts)
   opts = opts or {}
   if type(opts) ~= "table" then
-    error("nxvim-keys-helper.setup: opts must be a table", 2)
+    error("bemtvi-keys-helper.setup: opts must be a table", 2)
   end
 
   -- Validate loudly: a mistyped option would otherwise land in M.config and surface
@@ -476,7 +476,7 @@ function M.setup(opts)
     if v ~= nil then
       if type(v) ~= want then
         error(
-          string.format("nxvim-keys-helper.setup: `%s` must be a %s, got %s", name, want, type(v)),
+          string.format("bemtvi-keys-helper.setup: `%s` must be a %s, got %s", name, want, type(v)),
           2
         )
       end
@@ -484,12 +484,12 @@ function M.setup(opts)
     end
   end
   if M.config.delay < 0 then
-    error("nxvim-keys-helper.setup: `delay` must be >= 0", 2)
+    error("bemtvi-keys-helper.setup: `delay` must be >= 0", 2)
   end
   if M.config.max_height < 1 or M.config.max_width < MIN_CELL then
     error(
       string.format(
-        "nxvim-keys-helper.setup: `max_height` must be >= 1 and `max_width` >= %d",
+        "bemtvi-keys-helper.setup: `max_height` must be >= 1 and `max_width` >= %d",
         MIN_CELL
       ),
       2
@@ -498,13 +498,13 @@ function M.setup(opts)
 
   if opts.highlights ~= nil then
     if type(opts.highlights) ~= "table" then
-      error("nxvim-keys-helper.setup: `highlights` must be a table of group definitions", 2)
+      error("bemtvi-keys-helper.setup: `highlights` must be a table of group definitions", 2)
     end
     -- Merged, not replaced, so a later setup() adding one override doesn't drop the
     -- ones already in force (and the ColorScheme hook below re-applies the full set).
     for name, spec in pairs(opts.highlights) do
       if type(spec) ~= "table" then
-        error("nxvim-keys-helper.setup: highlight `" .. tostring(name) .. "` must be a table", 2)
+        error("bemtvi-keys-helper.setup: highlight `" .. tostring(name) .. "` must be a table", 2)
       end
       M.config.highlights[name] = spec
     end
@@ -516,9 +516,9 @@ function M.setup(opts)
   -- which fires AFTER the theme's own highlight calls, so a theme that styles
   -- WhichKey* still wins and one that doesn't gets working colors back. The augroup is
   -- cleared on each setup(), so a re-run never stacks a second hook.
-  nx.autocmd.create("ColorScheme", {
-    group = nx.augroup.create("NxvimKeysHelper", { clear = true }),
-    desc = "nxvim-keys-helper: re-install the popup's fallback highlights",
+  btv.autocmd.create("ColorScheme", {
+    group = btv.augroup.create("BtvvimKeysHelper", { clear = true }),
+    desc = "bemtvi-keys-helper: re-install the popup's fallback highlights",
     callback = function()
       apply_highlights(M.config.highlights)
     end,
@@ -540,14 +540,14 @@ function M.setup(opts)
     return M
   end
 
-  mounted = nx.component({
+  mounted = btv.component({
     surface = "float",
     setup = function(ctx)
       -- The one piece of state: the current pending context (or nil when there is none).
       local state = ctx.reactive({ pending = nil })
 
       -- The FIRST show is debounced so a quick sequence never flashes the popup.
-      -- `nx.utils.debounce` bakes its interval in at construction, so rebuild it when
+      -- `btv.utils.debounce` bakes its interval in at construction, so rebuild it when
       -- `config.delay` changes — otherwise a second setup()'s delay would be silently
       -- ignored for the rest of the session.
       local show, show_ms
@@ -556,7 +556,7 @@ function M.setup(opts)
           if show then
             show:cancel()
           end
-          show = nx.utils.debounce(function(pending)
+          show = btv.utils.debounce(function(pending)
             state.pending = pending
           end, M.config.delay)
           show_ms = M.config.delay
@@ -569,7 +569,7 @@ function M.setup(opts)
         end
       end
 
-      nx.on_key_pending(function(c)
+      btv.on_key_pending(function(c)
         if c.keys == "" then
           -- Cleared context (prefix completed, broke, or timed out): cancel the
           -- pending show and hide at once. A live source-B state has empty

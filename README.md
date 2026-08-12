@@ -1,7 +1,7 @@
-# nxvim-keys-helper
+# bemtvi-keys-helper
 
 A live popup of the keys that can follow what you've just typed — a **which-key**
-for [nxvim](https://github.com/davidrios/nxvim).
+for [bemtvi](https://github.com/davidrios/bemtvi).
 
 Press `<leader>` (or `g`, `z`, `<C-w>`, …) and pause: a bordered popup appears in
 the bottom-right corner listing every key that can come next, each with its
@@ -25,9 +25,9 @@ complete a mapping, break the sequence, or wait out the timeout and it closes.
 ╰──────────────────────────────────────────────────────╯
 ```
 
-It is built natively on the `nx.*` API — **no blocking key reads, no key
-interception**. It subscribes to nxvim's pending-key *oracle*
-(`nx.on_key_pending`) and renders the continuations onto a non-focus floating
+It is built natively on the `btv.*` API — **no blocking key reads, no key
+interception**. It subscribes to bemtvi's pending-key *oracle*
+(`btv.on_key_pending`) and renders the continuations onto a non-focus floating
 window, so it never interrupts the sequence you're in the middle of typing.
 
 - **Your maps and the built-in grammar** — the same oracle feeds `showcmd`, so
@@ -44,11 +44,11 @@ window, so it never interrupts the sequence you're in the middle of typing.
 Declare it with the built-in `:Plugins` manager in your `init.lua`:
 
 ```lua
-nx.plugins({
+btv.plugins({
   {
-    "davidrios/nxvim-keys-helper",
+    "davidrios/bemtvi-keys-helper",
     config = function()
-      require("nxvim-keys-helper").setup({})
+      require("bemtvi-keys-helper").setup({})
     end,
   },
 })
@@ -62,13 +62,13 @@ Full docs — every `setup()` option, naming prefix groups, the built-in command
 grammar, the highlight groups, and the module API — live in the help file. The
 same source renders both on GitHub and in the editor:
 
-- In editor: `:help nxvim-keys-helper`
-- On GitHub: [doc/nxvim-keys-helper.md](./doc/nxvim-keys-helper.md) (the help source)
+- In editor: `:help bemtvi-keys-helper`
+- On GitHub: [doc/bemtvi-keys-helper.md](./doc/bemtvi-keys-helper.md) (the help source)
 
 ## Trying it locally
 
 ```sh
-NXVIM_CONFIG=examples nxvim examples/sample.txt
+BEMTVI_CONFIG=examples bemtvi examples/sample.txt
 ```
 
 (run from the repo root — the demo config in `examples/init.lua` loads the plugin
@@ -77,15 +77,15 @@ straight from this checkout, so no `:PluginSync` is needed).
 ## Development
 
 ```sh
-nxvim --test-plugin .
+bemtvi --test-plugin .
 ```
 
-The Lua suite (`test/popup_spec.lua`) drives a real editor through nxvim's native
-`nx.test` framework: feed a leader prefix, wait for the debounced popup, and
+The Lua suite (`test/popup_spec.lua`) drives a real editor through bemtvi's native
+`btv.test` framework: feed a leader prefix, wait for the debounced popup, and
 assert on the floating window's text via `t:float()`.
 
-The vimdoc `doc/nxvim-keys-helper.txt` is **generated** from
-`doc/nxvim-keys-helper.md` via
+The vimdoc `doc/bemtvi-keys-helper.txt` is **generated** from
+`doc/bemtvi-keys-helper.md` via
 [panvimdoc](https://github.com/kdheepak/panvimdoc): edit the `.md`, then run
 `bash scripts/gen-vimdoc.sh` (needs `pandoc` + `git`). Never edit the `.txt` by
 hand.

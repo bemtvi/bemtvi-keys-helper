@@ -1,7 +1,7 @@
-<!-- DO NOT EDIT doc/nxvim-keys-helper.txt BY HAND. It is generated from this file by
+<!-- DO NOT EDIT doc/bemtvi-keys-helper.txt BY HAND. It is generated from this file by
 panvimdoc — run `scripts/gen-vimdoc.sh` after editing. -->
 
-A live popup of the keys that can follow what you've just typed — a **which-key** for nxvim.
+A live popup of the keys that can follow what you've just typed — a **which-key** for bemtvi.
 
 Press `<leader>` (or `g`, `z`, `<C-w>`, …) and pause: a bordered popup appears in the
 bottom-right corner listing every key that can come next, each with its description. Keep typing
@@ -25,32 +25,32 @@ wait out the timeout and it closes.
 ╰──────────────────────────────────────────────────────╯
 ```
 
-<!-- Passed through verbatim so `:help nxvim-keys-helper` lands on this page (panvimdoc
+<!-- Passed through verbatim so `:help bemtvi-keys-helper` lands on this page (panvimdoc
      derives per-section tags but no bare project tag). -->
 
 ```vimdoc
-                              *nxvim-keys-helper* *nxvim-keys-helper-intro*
+                              *bemtvi-keys-helper* *bemtvi-keys-helper-intro*
 ```
 
 # How it works
 
-The plugin is built entirely on the native `nx.*` API: **no blocking key reads, no key
+The plugin is built entirely on the native `btv.*` API: **no blocking key reads, no key
 interception**. It never sits between you and the editor — it only watches and draws.
 
-Three nx signals do the whole job:
+Three btv signals do the whole job:
 
-- `nx.on_key_pending(fn)` — the engine's pending-prefix *oracle*. The
+- `btv.on_key_pending(fn)` — the engine's pending-prefix *oracle*. The
   server watches the mapped-prefix trie and pushes a context
   (`{ mode, keys, continuations, label }`) every time the withheld prefix
   changes: grows, descends, or clears. It is fire-on-change, not
   per-keystroke (ADR 0002 rule 4: no per-key Lua), so an idle editor pays
   nothing.
-- `nx.component{ surface = "float" }` — the popup is a float-backed
+- `btv.component{ surface = "float" }` — the popup is a float-backed
   component: reactive state (the pending context) plus a pure `render`. An
   *empty* render hides it, so the whole show/refresh/hide cycle is
   declarative and the plugin never touches a float handle. The `float`
   surface takes no focus and binds no keys.
-- `nx.utils.debounce(fn, ms)` — coalesces the oracle's bursts so a fast,
+- `btv.utils.debounce(fn, ms)` — coalesces the oracle's bursts so a fast,
   deliberate sequence (`<Space>w` typed quickly) never flashes the popup.
   Only the *first* show is debounced; once the popup is up, descending into
   a group refreshes it immediately rather than making you wait out another
@@ -61,11 +61,11 @@ Three nx signals do the whole job:
 Declare it with the built-in `:Plugins` manager in your `init.lua`:
 
 ```lua
-nx.plugins({
+btv.plugins({
   {
-    "davidrios/nxvim-keys-helper",
+    "davidrios/bemtvi-keys-helper",
     config = function()
-      require("nxvim-keys-helper").setup({})
+      require("bemtvi-keys-helper").setup({})
     end,
   },
 })
@@ -75,11 +75,11 @@ Then run `:PluginSync` to clone it. That's it — start typing a prefix and paus
 
 # Setup
 
-`require("nxvim-keys-helper").setup(opts)` wires the popup. Every field is optional; the defaults
+`require("bemtvi-keys-helper").setup(opts)` wires the popup. Every field is optional; the defaults
 are shown below.
 
 ```lua
-require("nxvim-keys-helper").setup({
+require("bemtvi-keys-helper").setup({
   delay = 200,         -- pause (ms) after the last key before it shows
   timeout = false,     -- vim.o.timeout (see Timeout below)
   relative = "bottom", -- anchor: "bottom" | "cursor" | "editor"
@@ -126,11 +126,11 @@ past those has no effect. Lowering them keeps the popup deliberately small.
 # Naming groups
 
 A prefix that only leads deeper (e.g. `<leader>f` when you have `<leader>ff` and `<leader>fg`)
-shows as a **group**. nxvim's engine has no description to attach to a bare prefix, so by default
+shows as a **group**. bemtvi's engine has no description to attach to a bare prefix, so by default
 a group renders as `+more`. Give it a real name with `spec`:
 
 ```lua
-require("nxvim-keys-helper").setup({
+require("bemtvi-keys-helper").setup({
   spec = {
     { "<leader>f", group = "file" },          -- positional prefix
     { prefix = "<leader>g", group = "git" },  -- or the named field
@@ -138,21 +138,21 @@ require("nxvim-keys-helper").setup({
 })
 ```
 
-`<leader>` / `<localleader>` are expanded the way nxvim reports keys, and they are expanded when
+`<leader>` / `<localleader>` are expanded the way bemtvi reports keys, and they are expanded when
 the popup **renders** — not when the entry is registered. So a config that sets `vim.g.mapleader`
 *after* the plugin's `config` function runs (the usual plugin-manager ordering) still gets its
 group names.
 
 Leaf mappings need no registration — their description comes straight from the `desc` you pass to
-`nx.keymap.set`:
+`btv.keymap.set`:
 
 ```lua
-nx.keymap.set("n", "<leader>w", "<cmd>write<cr>", { desc = "write" })
+btv.keymap.set("n", "<leader>w", "<cmd>write<cr>", { desc = "write" })
 ```
 
 # Built-in command grammar
 
-The popup is fed by the same oracle nxvim uses for `showcmd`, so it covers the built-in motions
+The popup is fed by the same oracle bemtvi uses for `showcmd`, so it covers the built-in motions
 too, not just your maps:
 
 - pause after `z` for the viewport commands (`zt` / `zz` / `zb`, …),
@@ -179,13 +179,13 @@ WhichKeySeparator  the gap between the key and its description
 
 The plugin installs its built-in colors only as a **fallback** — if your colorscheme (or your
 `highlights` override) already defines a group, that wins. Those built-in colors are not
-hardcoded to one theme: they are *derived* from the active colorscheme through `nx.hl.palette()`
+hardcoded to one theme: they are *derived* from the active colorscheme through `btv.hl.palette()`
 (the key takes its cyan, a group its purple, and so on from the hues the running theme actually
-uses), so the popup reads as part of whatever is loaded — the editor's own `nxvim` One Dark by
+uses), so the popup reads as part of whatever is loaded — the editor's own `bemtvi` One Dark by
 default. Override any of them explicitly:
 
 ```lua
-require("nxvim-keys-helper").setup({
+require("bemtvi-keys-helper").setup({
   highlights = {
     WhichKey = { fg = "#89b4fa" },
     WhichKeyGroup = { fg = "#f9e2af", bold = true },
@@ -201,16 +201,16 @@ taken from *its* palette rather than the previous theme's.
 
 ## setup
 
-`require("nxvim-keys-helper").setup(opts)` — wire the popup. See |nxvim-keys-helper-setup|.
-Returns the module, so `local kh = require("nxvim-keys-helper").setup({})` works.
+`require("bemtvi-keys-helper").setup(opts)` — wire the popup. See |bemtvi-keys-helper-setup|.
+Returns the module, so `local kh = require("bemtvi-keys-helper").setup({})` works.
 
 ## add
 
-`require("nxvim-keys-helper").add(spec)` — register group names outside of `setup()`. `spec` takes
+`require("bemtvi-keys-helper").add(spec)` — register group names outside of `setup()`. `spec` takes
 the same entries as `opts.spec`:
 
 ```lua
-require("nxvim-keys-helper").add({
+require("bemtvi-keys-helper").add({
   { "<leader>b", group = "buffer" },
   { prefix = "<leader>x", group = "trouble" },
 })
@@ -221,7 +221,7 @@ a prefix replaces its name, so calling it repeatedly is safe. The next popup ref
 
 ## config
 
-`require("nxvim-keys-helper").config` — the live, merged config table. Read-only by convention;
+`require("bemtvi-keys-helper").config` — the live, merged config table. Read-only by convention;
 change it through `setup()` so validation runs.
 
 # Trying it locally
@@ -229,7 +229,7 @@ change it through `setup()` so validation runs.
 This repo ships a runnable demo. From a checkout of this repo:
 
 ```sh
-NXVIM_CONFIG=examples nxvim examples/sample.txt
+BEMTVI_CONFIG=examples bemtvi examples/sample.txt
 ```
 
 The demo's `init.lua` loads the plugin straight from this checkout (`dir=`), so no `:PluginSync`
@@ -238,23 +238,23 @@ is needed.
 # Development
 
 ```sh
-nxvim --test-plugin .
+bemtvi --test-plugin .
 ```
 
-The Lua suite (`test/popup_spec.lua`) drives a real editor through nxvim's native `nx.test`
+The Lua suite (`test/popup_spec.lua`) drives a real editor through bemtvi's native `btv.test`
 framework: feed a leader prefix, wait for the debounced popup, and assert on the floating
 window's text via `t:float()`.
 
 ```lua
-nx.test.it("shows the leader menu on pause", function(t)
+btv.test.it("shows the leader menu on pause", function(t)
   t:feed("<Space>")
   local float = t:wait_for(function()
     return t:float()
   end)
-  nx.test.expect(float.text).to_contain("write")
+  btv.test.expect(float.text).to_contain("write")
 end)
 ```
 
-The vimdoc `doc/nxvim-keys-helper.txt` is **generated** from `doc/nxvim-keys-helper.md` via
+The vimdoc `doc/bemtvi-keys-helper.txt` is **generated** from `doc/bemtvi-keys-helper.md` via
 panvimdoc <https://github.com/kdheepak/panvimdoc>: edit the `.md`, then run
 `bash scripts/gen-vimdoc.sh` (needs `pandoc` + `git`). Never edit the `.txt` by hand.

@@ -1,4 +1,4 @@
-nxvim-keys-helper demo
+bemtvi-keys-helper demo
 ======================
 
 Press <leader> (Space) and pause — a popup appears in the bottom-right with the

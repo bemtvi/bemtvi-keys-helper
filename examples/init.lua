@@ -1,6 +1,6 @@
--- Runnable demo for nxvim-keys-helper.
+-- Runnable demo for bemtvi-keys-helper.
 --
---     NXVIM_CONFIG=examples nxvim examples/sample.txt
+--     BEMTVI_CONFIG=examples bemtvi examples/sample.txt
 --
 -- Each section below has a TYPE THIS / SEE THAT note. The short version: press
 -- <leader> (Space) and pause.
@@ -13,16 +13,16 @@ vim.g.mapleader = " "
 
 -- ----- 2. load the plugin ----------------------------------------------------
 -- Straight from this repo (a local-dev spec: `dir` is never cloned). A real config
--- would use `{ "davidrios/nxvim-keys-helper", config = ... }` plus `:PluginSync`.
+-- would use `{ "davidrios/bemtvi-keys-helper", config = ... }` plus `:PluginSync`.
 --
 -- TYPE THIS: <Space> and pause.  SEE THAT: a popup in the bottom-right corner
 -- listing w / q / +file / +git.
-nx.plugins({
+btv.plugins({
   {
-    name = "nxvim-keys-helper",
+    name = "bemtvi-keys-helper",
     dir = vim.fn.expand("<sfile>:p:h:h"), -- the repo root (this file's grandparent dir)
     config = function()
-      require("nxvim-keys-helper").setup({
+      require("bemtvi-keys-helper").setup({
         delay = 200,
         spec = {
           { "<leader>f", group = "file" },
@@ -39,22 +39,22 @@ nx.plugins({
 --
 -- TYPE THIS: <Space> then f (while the popup is up).  SEE THAT: it refreshes to
 -- the `f` group's keys AT ONCE — no second 200ms wait once the popup is open.
-nx.keymap.set("n", "<leader>w", function()
+btv.keymap.set("n", "<leader>w", function()
   print("write")
 end, { desc = "write" })
-nx.keymap.set("n", "<leader>q", function()
+btv.keymap.set("n", "<leader>q", function()
   print("quit")
 end, { desc = "quit" })
-nx.keymap.set("n", "<leader>ff", function()
+btv.keymap.set("n", "<leader>ff", function()
   print("find file")
 end, { desc = "find file" })
-nx.keymap.set("n", "<leader>fg", function()
+btv.keymap.set("n", "<leader>fg", function()
   print("live grep")
 end, { desc = "live grep" })
-nx.keymap.set("n", "<leader>gs", function()
+btv.keymap.set("n", "<leader>gs", function()
   print("git status")
 end, { desc = "git status" })
-nx.keymap.set("n", "<leader>gc", function()
+btv.keymap.set("n", "<leader>gc", function()
   print("git commit")
 end, { desc = "git commit" })
 
@@ -63,11 +63,11 @@ end, { desc = "git commit" })
 -- set. Here it names a group whose maps are declared below it.
 --
 -- TYPE THIS: <Space> and pause.  SEE THAT: `b` reads "+buffer", not "+more".
-require("nxvim-keys-helper").add({
+require("bemtvi-keys-helper").add({
   { "<leader>b", group = "buffer" },
 })
-nx.keymap.set("n", "<leader>bn", "<cmd>bnext<cr>", { desc = "next buffer" })
-nx.keymap.set("n", "<leader>bp", "<cmd>bprevious<cr>", { desc = "previous buffer" })
+btv.keymap.set("n", "<leader>bn", "<cmd>bnext<cr>", { desc = "next buffer" })
+btv.keymap.set("n", "<leader>bp", "<cmd>bprevious<cr>", { desc = "previous buffer" })
 
 -- ----- 5. capping the popup's size -------------------------------------------
 -- The popup spills into COLUMNS rather than off the bottom of the float, and
@@ -81,4 +81,4 @@ nx.keymap.set("n", "<leader>bp", "<cmd>bprevious<cr>", { desc = "previous buffer
 -- last cell becomes a "+5 more" badge — the popup says what it couldn't show
 -- rather than dropping keys in silence.
 --
--- require("nxvim-keys-helper").setup({ max_height = 8, max_width = 46 })
+-- require("bemtvi-keys-helper").setup({ max_height = 8, max_width = 46 })
