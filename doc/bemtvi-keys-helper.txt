@@ -1,22 +1,22 @@
-*bemtvi-keys-helper.txt*                            A which-key popup for bemtvi
+*bemtvi-keys-helper.txt*                          A which-key popup for bemtvi
 
 ==============================================================================
-Table of Contents                        *bemtvi-keys-helper-table-of-contents*
+Table of Contents                       *bemtvi-keys-helper-table-of-contents*
 
-1. How it works                               |bemtvi-keys-helper-how-it-works|
-2. Install                                         |bemtvi-keys-helper-install|
-3. Setup                                             |bemtvi-keys-helper-setup|
-  - Timeout                                  |bemtvi-keys-helper-setup-timeout|
-  - Size                                        |bemtvi-keys-helper-setup-size|
-4. Naming groups                             |bemtvi-keys-helper-naming-groups|
-5. Built-in command grammar       |bemtvi-keys-helper-built-in-command-grammar|
-6. Highlights                                   |bemtvi-keys-helper-highlights|
-7. API                                                 |bemtvi-keys-helper-api|
-  - setup                                        |bemtvi-keys-helper-api-setup|
-  - add                                            |bemtvi-keys-helper-api-add|
-  - config                                      |bemtvi-keys-helper-api-config|
-8. Trying it locally                     |bemtvi-keys-helper-trying-it-locally|
-9. Development                                 |bemtvi-keys-helper-development|
+1. How it works                              |bemtvi-keys-helper-how-it-works|
+2. Install                                        |bemtvi-keys-helper-install|
+3. Setup                                            |bemtvi-keys-helper-setup|
+  - Timeout                                 |bemtvi-keys-helper-setup-timeout|
+  - Size                                       |bemtvi-keys-helper-setup-size|
+4. Naming groups                            |bemtvi-keys-helper-naming-groups|
+5. Built-in command grammar      |bemtvi-keys-helper-built-in-command-grammar|
+6. Highlights                                  |bemtvi-keys-helper-highlights|
+7. API                                                |bemtvi-keys-helper-api|
+  - setup                                       |bemtvi-keys-helper-api-setup|
+  - add                                           |bemtvi-keys-helper-api-add|
+  - config                                     |bemtvi-keys-helper-api-config|
+8. Trying it locally                    |bemtvi-keys-helper-trying-it-locally|
+9. Development                                |bemtvi-keys-helper-development|
 
 A live popup of the keys that can follow what you've just typed — a
 **which-key** for bemtvi.
@@ -48,11 +48,11 @@ and it closes.
 
 
 ==============================================================================
-1. How it works                               *bemtvi-keys-helper-how-it-works*
+1. How it works                              *bemtvi-keys-helper-how-it-works*
 
-The plugin is built entirely on the native `btv.*` API: **no blocking key reads,
-no key interception**. It never sits between you and the editor — it only
-watches and draws.
+The plugin is built entirely on the native `btv.*` API: **no blocking key
+reads, no key interception**. It never sits between you and the editor — it
+only watches and draws.
 
 Three btv signals do the whole job:
 
@@ -75,7 +75,7 @@ Three btv signals do the whole job:
 
 
 ==============================================================================
-2. Install                                         *bemtvi-keys-helper-install*
+2. Install                                        *bemtvi-keys-helper-install*
 
 Declare it with the built-in `:Plugins` manager in your `init.lua`:
 
@@ -95,7 +95,7 @@ pause.
 
 
 ==============================================================================
-3. Setup                                             *bemtvi-keys-helper-setup*
+3. Setup                                            *bemtvi-keys-helper-setup*
 
 `require("bemtvi-keys-helper").setup(opts)` wires the popup. Every field is
 optional; the defaults are shown below.
@@ -124,7 +124,7 @@ read when the popup shows or renders, never captured at mount. `highlights` are
 override does not drop the others. Only the component itself is mounted once.
 
 
-TIMEOUT                                      *bemtvi-keys-helper-setup-timeout*
+TIMEOUT                                     *bemtvi-keys-helper-setup-timeout*
 
 `timeout` is applied straight to `vim.o.timeout`, and it defaults to **false**.
 
@@ -136,7 +136,7 @@ Disabling the mapping timeout keeps the sequence open. Pass `timeout = true` to
 `setup()` to keep vim's normal behaviour instead.
 
 
-SIZE                                            *bemtvi-keys-helper-setup-size*
+SIZE                                           *bemtvi-keys-helper-setup-size*
 
 The popup grows to fit its content, bounded by `max_height` / `max_width` and
 by the screen. When the keys don't fit in one column it lays them out in
@@ -152,7 +152,7 @@ popup deliberately small.
 
 
 ==============================================================================
-4. Naming groups                             *bemtvi-keys-helper-naming-groups*
+4. Naming groups                            *bemtvi-keys-helper-naming-groups*
 
 A prefix that only leads deeper (e.g. `<leader>f` when you have `<leader>ff`
 and `<leader>fg`) shows as a **group**. bemtvi's engine has no description to
@@ -182,7 +182,7 @@ the `desc` you pass to `btv.keymap.set`:
 
 
 ==============================================================================
-5. Built-in command grammar       *bemtvi-keys-helper-built-in-command-grammar*
+5. Built-in command grammar      *bemtvi-keys-helper-built-in-command-grammar*
 
 The popup is fed by the same oracle bemtvi uses for `showcmd`, so it covers the
 built-in motions too, not just your maps:
@@ -200,7 +200,7 @@ one-line hint card.
 
 
 ==============================================================================
-6. Highlights                                   *bemtvi-keys-helper-highlights*
+6. Highlights                                  *bemtvi-keys-helper-highlights*
 
 The popup uses four highlight groups, named after which-key.nvim's so a
 colorscheme that already styles them just works:
@@ -236,17 +236,17 @@ the previous theme's.
 
 
 ==============================================================================
-7. API                                                 *bemtvi-keys-helper-api*
+7. API                                                *bemtvi-keys-helper-api*
 
 
-SETUP                                            *bemtvi-keys-helper-api-setup*
+SETUP                                           *bemtvi-keys-helper-api-setup*
 
 `require("bemtvi-keys-helper").setup(opts)` — wire the popup. See
 |bemtvi-keys-helper-setup|. Returns the module, so `local kh =
 require("bemtvi-keys-helper").setup({})` works.
 
 
-ADD                                                *bemtvi-keys-helper-api-add*
+ADD                                               *bemtvi-keys-helper-api-add*
 
 `require("bemtvi-keys-helper").add(spec)` — register group names outside of
 `setup()`. `spec` takes the same entries as `opts.spec`:
@@ -263,14 +263,14 @@ Call it any time — before or after `setup()`, before or after
 repeatedly is safe. The next popup reflects it.
 
 
-CONFIG                                          *bemtvi-keys-helper-api-config*
+CONFIG                                         *bemtvi-keys-helper-api-config*
 
 `require("bemtvi-keys-helper").config` — the live, merged config table.
 Read-only by convention; change it through `setup()` so validation runs.
 
 
 ==============================================================================
-8. Trying it locally                     *bemtvi-keys-helper-trying-it-locally*
+8. Trying it locally                    *bemtvi-keys-helper-trying-it-locally*
 
 This repo ships a runnable demo. From a checkout of this repo:
 
@@ -283,15 +283,15 @@ so no `:PluginSync` is needed.
 
 
 ==============================================================================
-9. Development                                 *bemtvi-keys-helper-development*
+9. Development                                *bemtvi-keys-helper-development*
 
 >sh
     bemtvi --test-plugin .
 <
 
 The Lua suite (`test/popup_spec.lua`) drives a real editor through bemtvi's
-native `btv.test` framework: feed a leader prefix, wait for the debounced popup,
-and assert on the floating window's text via `t:float()`.
+native `btv.test` framework: feed a leader prefix, wait for the debounced
+popup, and assert on the floating window's text via `t:float()`.
 
 >lua
     btv.test.it("shows the leader menu on pause", function(t)
