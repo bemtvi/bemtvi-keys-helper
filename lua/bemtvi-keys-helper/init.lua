@@ -8,7 +8,7 @@
 -- Install it through the `:Plugins` manager (in your init.lua):
 --
 --     btv.plugins({
---       { "davidrios/bemtvi-keys-helper",
+--       { "bemtvi/bemtvi-keys-helper",
 --         config = function() require("bemtvi-keys-helper").setup({}) end },
 --     })
 --

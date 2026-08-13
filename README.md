@@ -1,7 +1,7 @@
 # bemtvi-keys-helper
 
 A live popup of the keys that can follow what you've just typed — a **which-key**
-for [bemtvi](https://github.com/davidrios/bemtvi).
+for [bemtvi](https://github.com/bemtvi/bemtvi).
 
 Press `<leader>` (or `g`, `z`, `<C-w>`, …) and pause: a bordered popup appears in
 the bottom-right corner listing every key that can come next, each with its
@@ -46,7 +46,7 @@ Declare it with the built-in `:Plugins` manager in your `init.lua`:
 ```lua
 btv.plugins({
   {
-    "davidrios/bemtvi-keys-helper",
+    "bemtvi/bemtvi-keys-helper",
     config = function()
       require("bemtvi-keys-helper").setup({})
     end,

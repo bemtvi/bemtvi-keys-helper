@@ -63,7 +63,7 @@ Declare it with the built-in `:Plugins` manager in your `init.lua`:
 ```lua
 btv.plugins({
   {
-    "davidrios/bemtvi-keys-helper",
+    "bemtvi/bemtvi-keys-helper",
     config = function()
       require("bemtvi-keys-helper").setup({})
     end,

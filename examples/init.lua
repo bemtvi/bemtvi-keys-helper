@@ -13,7 +13,7 @@ vim.g.mapleader = " "
 
 -- ----- 2. load the plugin ----------------------------------------------------
 -- Straight from this repo (a local-dev spec: `dir` is never cloned). A real config
--- would use `{ "davidrios/bemtvi-keys-helper", config = ... }` plus `:PluginSync`.
+-- would use `{ "bemtvi/bemtvi-keys-helper", config = ... }` plus `:PluginSync`.
 --
 -- TYPE THIS: <Space> and pause.  SEE THAT: a popup in the bottom-right corner
 -- listing w / q / +file / +git.
