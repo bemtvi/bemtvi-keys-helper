@@ -10,13 +10,14 @@ Table of Contents                       *bemtvi-keys-helper-table-of-contents*
   - Size                                       |bemtvi-keys-helper-setup-size|
 4. Naming groups                            |bemtvi-keys-helper-naming-groups|
 5. Built-in command grammar      |bemtvi-keys-helper-built-in-command-grammar|
-6. Highlights                                  |bemtvi-keys-helper-highlights|
-7. API                                                |bemtvi-keys-helper-api|
+6. Keys the client can't send|bemtvi-keys-helper-keys-the-client-can't-send|
+7. Highlights                                  |bemtvi-keys-helper-highlights|
+8. API                                                |bemtvi-keys-helper-api|
   - setup                                       |bemtvi-keys-helper-api-setup|
   - add                                           |bemtvi-keys-helper-api-add|
   - config                                     |bemtvi-keys-helper-api-config|
-8. Trying it locally                    |bemtvi-keys-helper-trying-it-locally|
-9. Development                                |bemtvi-keys-helper-development|
+9. Trying it locally                    |bemtvi-keys-helper-trying-it-locally|
+10. Development                               |bemtvi-keys-helper-development|
 
 A live popup of the keys that can follow what you've just typed — a
 **which-key** for bemtvi.
@@ -200,7 +201,27 @@ one-line hint card.
 
 
 ==============================================================================
-6. Highlights                                  *bemtvi-keys-helper-highlights*
+6. Keys the client can't send*bemtvi-keys-helper-keys-the-client-can't-send*
+
+Some clients can only deliver a chord via a stand-in. The browser is the case:
+Chrome and Edge keep `<C-w>` / `<C-t>` / `<C-n>` / `<C-1>`..`<C-9>` for
+themselves on Windows and Linux, so the web client sends them on Alt instead
+— you press `Alt+w` and the editor sees `<C-w>`.
+
+A key helper that named `<C-w>` there would spend its whole job telling you to
+press a chord your browser eats, so the popup renders every key through the
+substitutions the attached client declares in `btv.ui.caps().key_labels` —
+both the continuation column and the title. In a browser the window prefix
+reads `<A-w>`, and the doubled prefix offers `<A-w>`; in a terminal (and on a
+Mac, where those shortcuts hang off Cmd and nothing is substituted) it reads
+`<C-w>` as always.
+
+This is display only. Group prefixes registered with `add()` are still matched
+on the canonical notation, because that is what the editor actually receives.
+
+
+==============================================================================
+7. Highlights                                  *bemtvi-keys-helper-highlights*
 
 The popup uses four highlight groups, named after which-key.nvim's so a
 colorscheme that already styles them just works:
@@ -236,7 +257,7 @@ the previous theme's.
 
 
 ==============================================================================
-7. API                                                *bemtvi-keys-helper-api*
+8. API                                                *bemtvi-keys-helper-api*
 
 
 SETUP                                           *bemtvi-keys-helper-api-setup*
@@ -270,7 +291,7 @@ Read-only by convention; change it through `setup()` so validation runs.
 
 
 ==============================================================================
-8. Trying it locally                    *bemtvi-keys-helper-trying-it-locally*
+9. Trying it locally                    *bemtvi-keys-helper-trying-it-locally*
 
 This repo ships a runnable demo. From a checkout of this repo:
 
@@ -283,7 +304,7 @@ so no `:PluginSync` is needed.
 
 
 ==============================================================================
-9. Development                                *bemtvi-keys-helper-development*
+10. Development                               *bemtvi-keys-helper-development*
 
 >sh
     bemtvi --test-plugin .

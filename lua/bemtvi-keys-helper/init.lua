@@ -342,6 +342,34 @@ local function columnize(entries, h, w)
   return cols, rows, hidden
 end
 
+-- ----- client key labels ----------------------------------------------------
+
+-- Some clients cannot deliver a chord at all and take a stand-in instead. The browser
+-- is the case: Chrome and Edge keep `<C-w>` / `<C-t>` / `<C-n>` / `<C-1>`..`<C-9>` for
+-- themselves on Windows and Linux, so the web client sends them on Alt — a visitor
+-- presses `Alt+w` and the editor sees `<C-w>`. The client declares those substitutions
+-- in `btv.ui.caps().key_labels`, and a popup that NAMES keys has to honour them or it
+-- spends its whole job telling a visitor to press chords the browser eats.
+--
+-- Display only. `ctx.keys` and `c.key` stay canonical everywhere they are MATCHED
+-- against (the group registry), since that is what the editor still sees.
+local function key_labels()
+  return btv.ui.caps().key_labels or {}
+end
+
+-- Rewrite each chord of a notation RUN (`<C-w><C-w>`, `<Space>f`) through `labels`,
+-- leaving anything unlabelled alone. Tokenized on `<…>` rather than matched whole, so
+-- a multi-chord prefix relabels chord by chord; bare printable keys are never
+-- substituted (a client can always deliver those, so no label names one).
+local function relabel(keys, labels)
+  if next(labels) == nil then
+    return keys
+  end
+  return (keys:gsub("<[^<>]+>", function(tok)
+    return labels[tok] or tok
+  end))
+end
+
 -- ----- rendering ------------------------------------------------------------
 
 -- The continuations worth drawing, each pre-measured (display width, not byte length,
@@ -357,6 +385,7 @@ end
 -- mapping's `desc`.
 local function entries_for(ctx)
   local named = groups()
+  local labels = key_labels()
   local out = {}
   for _, c in ipairs(ctx.continuations) do
     if c.available ~= false then
@@ -369,9 +398,12 @@ local function entries_for(ctx)
         label = (c.desc ~= nil and c.desc ~= "") and c.desc or ""
         hl = "WhichKeyDesc"
       end
+      -- The key as this client can actually be made to send it (`<C-w>` → `<A-w>` in a
+      -- browser); `named` above is still keyed on the canonical notation.
+      local shown = relabel(c.key, labels)
       out[#out + 1] = {
-        key = c.key,
-        kw = btv.str.displaywidth(c.key),
+        key = shown,
+        kw = btv.str.displaywidth(shown),
         label = label,
         lw = btv.str.displaywidth(label),
         hl = hl,
@@ -599,7 +631,7 @@ function M.setup(opts)
       -- Title the popup `keys — label` so the prefix isn't cryptic: a bare `d` reads
       -- as "d — Delete". Source-A leader prefixes have no label, so they title with
       -- the keys alone.
-      local title = " " .. c.keys
+      local title = " " .. relabel(c.keys, key_labels())
       if c.label and c.label ~= "" then
         title = title .. " — " .. c.label
       end

@@ -165,6 +165,21 @@ too, not just your maps:
 The open states — find-char, replace, marks, registers — have no finite key list to enumerate, so
 they arrive with a human label instead and render as a one-line hint card.
 
+# Keys the client can't send
+
+Some clients can only deliver a chord via a stand-in. The browser is the case: Chrome and Edge
+keep `<C-w>` / `<C-t>` / `<C-n>` / `<C-1>`..`<C-9>` for themselves on Windows and Linux, so the
+web client sends them on Alt instead — you press `Alt+w` and the editor sees `<C-w>`.
+
+A key helper that named `<C-w>` there would spend its whole job telling you to press a chord your
+browser eats, so the popup renders every key through the substitutions the attached client
+declares in `btv.ui.caps().key_labels` — both the continuation column and the title. In a browser
+the window prefix reads `<A-w>`, and the doubled prefix offers `<A-w>`; in a terminal (and on a
+Mac, where those shortcuts hang off Cmd and nothing is substituted) it reads `<C-w>` as always.
+
+This is display only. Group prefixes registered with `add()` are still matched on the canonical
+notation, because that is what the editor actually receives.
+
 # Highlights
 
 The popup uses four highlight groups, named after which-key.nvim's so a colorscheme that already

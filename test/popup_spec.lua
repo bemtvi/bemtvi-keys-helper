@@ -242,6 +242,41 @@ btv.test.describe("bemtvi-keys-helper", function()
     btv.test.expect(fg("WhichKeySeparator")).to_equal("#444444")
   end)
 
+  -- A client that can only deliver a chord via a stand-in (the browser: Chrome keeps
+  -- `<C-w>` for itself, so the web client sends it on Alt) declares the substitution in
+  -- `btv.ui.caps().key_labels`. The popup must NAME the chord the user can press —
+  -- offering `<C-w>` to someone whose browser eats it is the one thing a key helper
+  -- must not do. `btv._set_ui_caps` is the setter the server calls at attach; it takes
+  -- the labels as the flat pair list the wire carries.
+  btv.test.it("names keys the way the attached client can send them", function(t)
+    btv._set_ui_caps(true, true, false, { "<C-w>", "<A-w>" })
+    t:feed("<C-w>")
+    local float = t:wait_for(function()
+      local f = t:float()
+      return f and f.text:find("Dock layer") and f
+    end)
+    -- The doubled window prefix is the row a browser visitor cannot press as reported.
+    btv.test.expect(float.text).to_contain("<A-w>")
+    btv.test.expect(float.text).never.to_contain("<C-w>")
+    -- Unsubstituted continuations are untouched.
+    btv.test.expect(float.text).to_contain("s")
+    -- Including the title, which names the prefix you are already holding.
+    btv.test.expect(float.title).to_contain("<A-w>")
+    btv.test.expect(float.title).never.to_contain("<C-w>")
+  end)
+
+  -- …and with nothing to substitute (every terminal client) the canonical notation is
+  -- what shows, so the relabeling can't leak into a session that never asked for it.
+  btv.test.it("leaves keys alone when the client substitutes nothing", function(t)
+    btv._set_ui_caps(true, true, false, {})
+    t:feed("<C-w>")
+    local float = t:wait_for(function()
+      local f = t:float()
+      return f and f.text:find("Dock layer") and f
+    end)
+    btv.test.expect(float.text).to_contain("<C-w>")
+  end)
+
   -- Loud on nonsense rather than a popup that silently never shows.
   btv.test.it("rejects a bad option type", function(t)
     local kh = require("bemtvi-keys-helper")
